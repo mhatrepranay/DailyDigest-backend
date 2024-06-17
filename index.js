@@ -6,14 +6,21 @@ import { expressjwt as expressJwt } from 'express-jwt';
 import UserModel1 from './models/User1.js';
 import newsrouter from "./routers/Articlerouter.js";
 import AnalyticsRouter from "./routers/AnalyticsRouter.js";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb://127.0.0.1:27017/crud");
+const DBURL = process.env.DBURL;
+const SECRET_KEY = process.env.SECRET_KEY || "your_secret_key";
+const PORT = process.env.PORT || 3001;
 
-const SECRET_KEY = "your_secret_key"; // Replace with your actual secret key
+mongoose.connect(DBURL)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log('MongoDB connection error:', err));
 
 // Middleware to verify JWT token
 const jwtMiddleware = expressJwt({
@@ -29,14 +36,14 @@ app.use("/", AnalyticsRouter);
 app.get('/', (req, res) => {
     UserModel1.find({})
         .then(users1 => res.json(users1))
-        .catch(err => console.log(err))
+        .catch(err => console.log(err));
 });
 
 // Add user API
 app.post("/createUser1", (req, res) => {
     UserModel1.create(req.body)
         .then(users1 => res.json(users1))
-        .catch(err => res.json(err))
+        .catch(err => res.json(err));
 });
 
 // Login API
@@ -48,7 +55,7 @@ app.post("/signIn", (req, res) => {
         .then(user => {
             if (user) {
                 // User found, generate and send JWT token
-                const token = jwt.sign({ id: user._id, username: user.username }, SECRET_KEY,);
+                const token = jwt.sign({ id: user._id, username: user.username }, SECRET_KEY);
                 res.json({ success: true, message: "Sign-in successful", token });
             } else {
                 // User not found or invalid credentials, send error response
@@ -62,8 +69,7 @@ app.post("/signIn", (req, res) => {
         });
 });
 
-
-//update user Api
+// Update user API
 app.put('/users/:id', async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
@@ -96,7 +102,6 @@ app.put('/users/:id', async (req, res) => {
     }
 });
 
-
 // Update user role API
 app.put('/users/:id/role', async (req, res) => {
     try {
@@ -122,9 +127,6 @@ app.put('/users/:id/role', async (req, res) => {
     }
 });
 
-
-
-
 // Get user by ID API (Protected Route)
 app.get('/profile', jwtMiddleware, (req, res) => {
     const userId = req.auth.id;
@@ -143,6 +145,6 @@ app.get('/profile', jwtMiddleware, (req, res) => {
         });
 });
 
-app.listen(3001, () => {
-    console.log("Server started");
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
 });
