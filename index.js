@@ -18,9 +18,17 @@ const DBURL = process.env.DBURL;
 const SECRET_KEY = process.env.SECRET_KEY || "your_secret_key";
 const PORT = process.env.PORT || 3001;
 
-mongoose.connect(DBURL)
+mongoose.connect(DBURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+})
     .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log('MongoDB connection error:', err));
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
+    });
+
 
 // Middleware to verify JWT token
 const jwtMiddleware = expressJwt({
